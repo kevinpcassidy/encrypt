@@ -1,0 +1,242 @@
+
+from tkinter import *
+from tkinter.filedialog import *
+from tkinter import messagebox
+import os
+
+
+class App:
+	def __init__(self, master):
+		#holding for graphic for program name
+		#self.logo = logo.gif
+		#self.image = Label(master, image = self.logo)
+		#self.image.grid(column = 0, row = 0, columnspan = 3)
+		
+		#displays program explanation
+		self.explanation = Label(master, justify=LEFT, padx = 10, pady = 5, text = "This program will encrypt a text file, based on a password. \nChoose your text file for encryption or decryption.")
+		self.explanation.grid(column = 0, row = 1, columnspan = 3)
+		
+		
+		#row 2 - label for select file
+		self.select = Label(master, text = "Selected file: ")
+		self.select.grid(column = 0, row =2)
+		
+		#creates string variable for filename?
+		self.name = ""
+		self.filename = StringVar()
+		#this should code my path to the selected file
+		self.filepath = Label(master, textvariable = self.filename)
+		self.filepath.grid(column = 1, row = 2)
+		
+		
+		#button for browse
+		self.browse = Button(master, text = "Browse", command = self.callback)
+		self.browse.grid(column = 2, row = 2)
+		
+		#row 3, label for pin number
+		self.pinlabel = Label(master, text = "Please enter your 4 digit PIN:")
+		self.pinlabel.grid(column = 0, row = 3, columnspan = 2)
+		
+		self.password = StringVar()
+		#pin entry
+		self.pin = Entry(master, textvariable = self.password, show="*", width = 5)
+		self.pin.grid(column = 2, row = 3)
+		
+		#validation warning
+		self.validatescript = StringVar()
+		self.valid = Label(master, textvariable = self.validatescript)
+		self.valid.grid(column = 2, row =4)
+		
+		#row 5, buttons
+		self.encrypt = Button(master, text = "Encrypt", command = self.encryption)
+		self.encrypt.grid(column = 0, row = 5)
+		
+		self.decrypt = Button(master, text="Decrypt", command = self.decryption)
+		self.decrypt.grid(column = 1, row = 5)
+		
+		self.close = Button(master, text = "Close", command = root.quit)
+		self.close.grid(column = 2, row = 5)
+		
+		
+		#creates function to encrypt
+	def encryption(self):
+		a = str(self.pin.get())
+		self.passThree(a)
+		self.passOne(a)
+		self.passTwo(a)
+		messagebox.showinfo("Alert", "Your file has been encrypted.")
+
+		
+		#creates function to decrypt
+	def decryption(self):
+		a = str(self.pin.get())
+		self.decodePassTwo(a)
+		self.decodePassOne(a)
+		self.decodePassThree(a)
+		messagebox.showinfo("Alert", "Your file has been decrypted.")
+
+	
+	def callback(self):
+		self.name = askopenfilename(defaultextension = 'txt', title = 'Select your file')
+		self.filename.set(self.name)
+	
+	def passThree(self, a):
+		password = a
+		place = int(password[3])
+		change =open(self.name, "r+")
+		new = open("temp.txt", "w")
+		count = -1
+		changed = False
+		for line in change:
+			count+=1
+			if count == place:
+				new.write(password)
+				changed = True
+			new.write(line)
+		
+
+		change.close()
+		new.close()
+		os.remove(self.name)
+		os.rename("temp.txt", self.name)
+		
+	def decodePassThree(self, a):
+			password = a
+			place = int(password[3])
+			old = open(self.name, "r")
+			new = open("temp.txt", "w")
+			count = -1
+			found = False
+				  
+			for line in old:
+					count+=1
+					if count == place:
+							if line[:4] == password:
+									found = True
+									line = line[4:]
+					new.write(line)
+													 
+					
+			old.close()
+			new.close()
+			if found ==True:
+					os.remove(self.name)
+					os.rename("temp.txt", self.name)
+			else:
+					os.remove("temp.txt")
+
+	def passOne(self, a):
+		base = key = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ !@#$%^&*()-_=+{}|:;<>?1234567890`~.,'"
+		password=int(a[0:2])
+		old = open(self.name, "r")
+		new = open("temp.txt", "w")
+		if password>89:
+			password=password-89
+		if password==89:
+			key = ""
+			for x in range(len(base)-1,-1,-1):
+				key+=base[x]
+		if password!=89:
+			key = ""
+			for x in range(password, len(base)):
+				key+=base[x]
+			for x in range(0,password):
+				key+=base[x]
+		
+		for line in old:
+			newstr = ""
+			for x in range (0, len(line)):
+				newstr+=key[base.find(line[x])]
+			newstr=newstr[:-1]
+			newstr+="\n"
+			new.write(newstr)
+
+
+		old.close()
+		new.close()
+		os.remove(self.name)
+		os.rename("temp.txt", self.name)
+		return
+		
+	def decodePassOne(self, a):
+		base = key = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ !@#$%^&*()-_=+{}|:;<>?1234567890`~.,'"
+		password=int(a[0:2])
+		old = open(self.name, "r")
+		new = open("temp.txt", "w")
+		if password>89:
+			password=password-89
+		if password==89:
+			key = ""
+			for x in range(len(base)-1,-1,-1):
+				key+=base[x]
+		if password!=89:
+			key = ""
+			for x in range(password, len(base)):
+				key+=base[x]
+			for x in range(0,password):
+				key+=base[x]
+		
+		newstr = ""
+
+		for line in old:
+			newstr = ""
+			for x in range (0, len(line)):
+				newstr+=base[key.find(line[x])]
+			newstr=newstr[:-1]
+			newstr+="\n"
+			new.write(newstr)
+
+		old.close()
+		new.close()
+		os.remove(self.name)
+		os.rename("temp.txt", self.name)
+		return 
+
+	def passTwo(self, a):
+		password = int(a[2])
+		old = open(self.name, "r")
+		new = open("temp.txt", "w")
+
+		for line in old:
+			newstr = ""
+			for x in range (0, len(line)-1):
+				newstr+=line[x]
+				if (x+1)%password==0:
+					newstr+=" "
+			newstr+="\n"
+			new.write(newstr)
+			
+		old.close()
+		new.close()
+		os.remove(self.name)
+		os.rename("temp.txt", self.name)
+		return
+
+	def decodePassTwo(self, a):
+		password = int(a[2])
+		old = open(self.name, "r")
+		new = open("temp.txt", "w")
+		for line in old:
+			count = 0
+			newstr = ""
+			for x in range(0, len(line)-1):
+				if count!=password:
+					newstr+=line[x]
+					count+=1
+				else:
+					count=0
+			newstr += "\n"
+			new.write(newstr)
+
+		old.close()
+		new.close()
+		os.remove(self.name)
+		os.rename("temp.txt", self.name)
+		return
+		
+
+root = Tk()
+
+app = App(root)
+
+root.mainloop()
